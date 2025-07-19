@@ -1,0 +1,1 @@
+# template-wordpress-aws-basic
