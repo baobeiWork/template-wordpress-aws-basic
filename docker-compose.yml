@@ -1,0 +1,17 @@
+version: '3'
+services:
+  wordpress:
+    container_name: wordpress
+    restart: always
+    build:
+      context: .
+      dockerfile: ./infrastructure/docker/cloud/wordpress/Dockerfile
+    ports:
+      - '8088:80'
+    environment:
+      - WORDPRESS_DB_HOST=mysql
+      - WORDPRESS_DB_USER=wordpress
+      - WORDPRESS_DB_PASSWORD=wordpress
+      - WORDPRESS_DB_NAME=wordpress
+    volumes:
+      - ./wordpress:/var/www/html
