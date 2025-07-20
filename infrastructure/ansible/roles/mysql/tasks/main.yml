@@ -1,0 +1,19 @@
+- name: Install MySQL server
+  dnf:
+    name: mariadb-server
+    state: present
+
+- name: Ensure MySQL service is started and enabled
+  systemd:
+    name: mariadb
+    enabled: yes
+    state: started
+
+- name: Deploy custom my.cnf
+  copy:
+    src: my.cnf
+    dest: /etc/my.cnf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart MySQL

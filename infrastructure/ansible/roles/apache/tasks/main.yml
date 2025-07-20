@@ -1,0 +1,35 @@
+- name: Check if Apache is installed
+  shell: rpm -q httpd
+  register: apache_installed
+  ignore_errors: true
+
+- name: Backup Apache config
+  when: apache_installed.rc == 0
+  command: cp -r /etc/httpd /tmp/backup_apache_conf_{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}
+  ignore_errors: true
+
+- name: Remove Apache if installed
+  when: apache_installed.rc == 0
+  dnf:
+    name: httpd
+    state: absent
+
+- name: Install Apache
+  dnf:
+    name: httpd
+    state: present
+
+- name: Enable and start Apache
+  systemd:
+    name: httpd
+    enabled: yes
+    state: started
+
+- name: Deploy virtualhost config
+  template:
+    src: wordpress.conf.j2
+    dest: /etc/httpd/conf.d/wordpress.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Reload Apache

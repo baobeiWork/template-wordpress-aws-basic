@@ -1,0 +1,18 @@
+{% for vhost in virtualhosts %}
+<VirtualHost *:80>
+    ServerName {{ vhost.servername }}
+    DocumentRoot {{ vhost.document_root }}
+
+    <Directory {{ vhost.document_root }}>
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    <FilesMatch \.php$>
+        SetHandler "proxy:unix:/run/php-fpm/{{ vhost.fpm_pool }}.sock|fcgi://localhost"
+    </FilesMatch>
+
+    ErrorLog /var/log/httpd/{{ vhost.servername }}_error.log
+    CustomLog /var/log/httpd/{{ vhost.servername }}_access.log combined
+</VirtualHost>
+{% endfor %}

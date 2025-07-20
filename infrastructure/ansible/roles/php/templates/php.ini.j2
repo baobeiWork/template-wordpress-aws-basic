@@ -1,0 +1,42 @@
+[PHP]
+engine = On
+short_open_tag = Off
+precision = 14
+output_buffering = 4096
+zlib.output_compression = Off
+implicit_flush = Off
+unserialize_callback_func =
+serialize_precision = -1
+disable_functions =
+disable_classes =
+
+expose_php = Off
+max_execution_time = {{ php_max_execution_time | default(30) }}
+max_input_time = {{ php_max_input_time | default(60) }}
+memory_limit = {{ php_memory_limit | default('128M') }}
+error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT
+display_errors = Off
+display_startup_errors = Off
+log_errors = On
+error_log = /var/log/php_errors.log
+post_max_size = {{ php_post_max_size | default('8M') }}
+upload_max_filesize = {{ php_upload_max_filesize | default('2M') }}
+variables_order = "GPCS"
+request_order = "GP"
+
+[Date]
+date.timezone = {{ php_timezone | default('Asia/Tokyo') }}
+
+[mbstring]
+mbstring.language = Japanese
+mbstring.internal_encoding = UTF-8
+mbstring.http_input = auto
+mbstring.http_output = UTF-8
+mbstring.encoding_translation = On
+
+[Session]
+session.save_handler = files
+session.save_path = "/var/lib/php/session"
+session.gc_maxlifetime = 1440
+session.gc_divisor = 1000
+session.gc_probability = 1

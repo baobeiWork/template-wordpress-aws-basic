@@ -1,0 +1,26 @@
+use_ssm: false
+
+env_file: "../../.env"
+
+server_name: localhost
+document_root: /var/www/html/wordpress
+
+# Virtualhosts
+virtualhosts:
+  - servername: localhost
+    document_root: /var/www/html/wordpress
+    fpm_pool: wordpress
+  # バーチャルホストでサーバを追加したい場合は下記のように追加
+  # - servername: example2.com
+  #   document_root: /var/www/example2
+  #   fpm_pool: example2
+
+# PHP
+php_max_execution_time: 60
+php_max_input_time: 90
+php_memory_limit: "256M"
+php_post_max_size: "16M"
+php_upload_max_filesize: "8M"
+php_timezone: "Asia/Tokyo"
+
+

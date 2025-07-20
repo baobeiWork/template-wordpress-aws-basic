@@ -1,0 +1,70 @@
+- name: Check if php-fpm is installed
+  shell: rpm -q php-fpm
+  register: php_fpm_installed
+  ignore_errors: true
+
+- name: Backup php-fpm config
+  when: php_fpm_installed.rc == 0
+  copy:
+    src: /etc/php-fpm.d
+    dest: /tmp/backup_php_fpm_conf_{{ ansible_date_time.iso8601 }}
+    remote_src: yes
+
+- name: Remove PHP and php-fpm if installed
+  when: php_fpm_installed.rc == 0
+  dnf:
+    name:
+      - php
+      - php-fpm
+      - php-mysqlnd
+      - php-gd
+      - php-mbstring
+      - php-json
+      - php-xml
+      - php-opcache
+      - php-curl
+      - php-zip
+    state: absent
+
+- name: Install PHP and necessary modules
+  dnf:
+    name:
+      - php
+      - php-fpm
+      - php-mysqlnd
+      - php-gd
+      - php-mbstring
+      - php-json
+      - php-xml
+      - php-opcache
+      - php-curl
+      - php-zip
+    state: present
+
+- name: Enable and start php-fpm service
+  systemd:
+    name: php-fpm
+    enabled: yes
+    state: started
+
+- name: Allow Apache to connect to PHP-FPM (SELinux対応)
+  command: setsebool -P httpd_can_network_connect on
+  when: ansible_facts.selinux.status == "enabled"
+
+# 任意：Firewalld が有効な場合
+- name: Open HTTP port (if firewalld is used)
+  firewalld:
+    port: 80/tcp
+    permanent: yes
+    state: enabled
+    immediate: yes
+  when: ansible_facts.services['firewalld'].state == 'running'
+
+- name: Deploy php.ini
+  template:
+    src: php.ini.j2
+    dest: /etc/php.ini
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart PHP-FPM
