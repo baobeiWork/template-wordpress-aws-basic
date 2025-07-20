@@ -10,4 +10,4 @@ services:
       - '8088:80'
     volumes:
       - ./wordpress:/var/www/html
-      - ./infrastructure/ansible:/WORK/ansible
+      - ./infrastructure/ansible:/workspace/ansible

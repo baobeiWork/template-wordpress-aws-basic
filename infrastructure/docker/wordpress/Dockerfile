@@ -18,6 +18,6 @@ RUN dnf -y update --allowerasing && \
 
 RUN ansible --version
 
-WORKDIR /WORK
+WORKDIR /workspace
 
 CMD ["tail", "-f", "/dev/null"]
