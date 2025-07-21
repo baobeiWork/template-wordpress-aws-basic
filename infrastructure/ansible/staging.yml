@@ -1,0 +1,14 @@
+- hosts: localhost
+  vars:
+      env: development
+  become: true
+  vars_files:
+    - group_vars/staging.yml
+  roles:
+    - role: common
+      tasks_from: load_db_vars
+    - php
+    - apache
+    - mysql
+    - wordpress
+
