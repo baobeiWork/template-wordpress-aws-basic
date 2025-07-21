@@ -1,4 +1,9 @@
-- name: Restart MySQL
+- name: Restart MySQL (systemd)
   systemd:
     name: mariadb
     state: restarted
+  when: use_systemd | default(true)
+
+- name: Restart MySQL (non-systemd)
+  shell: "pkill mysqld && nohup mysqld_safe > /var/log/mysqld.log 2>&1 &"
+  when: not use_systemd | default(false)

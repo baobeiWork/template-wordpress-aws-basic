@@ -1,13 +1,42 @@
-- name: Install MySQL server
+- name: Check if MySQL is installed
+  shell: rpm -q mariadb-server
+  register: mysql_installed
+  ignore_errors: true
+
+- name: Backup MySQL config
+  when: mysql_installed.rc == 0
+  command: cp -r /etc/my.cnf /tmp/backup_mysql_conf_{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}
+  ignore_errors: true
+
+- name: Remove MySQL if installed
+  when: mysql_installed.rc == 0
   dnf:
-    name: mariadb-server
+    name: mariadb105-server
+    state: absent
+
+- name: Install MariaDB 10.5 from AppStream
+  dnf:
+    name: mariadb105-server
     state: present
+
+- name: Kill existing mysqld processes (for local/dev)
+  shell: "pkill mysqld || true"
+  when: not use_systemd | default(false)
+
+- name: Remove stale MySQL socket files (for local/dev)
+  shell: "rm -f /var/lib/mysql/mysql.sock || true"
+  when: not use_systemd | default(false)
 
 - name: Ensure MySQL service is started and enabled
   systemd:
     name: mariadb
     enabled: yes
     state: started
+  when: use_systemd | default(true)
+
+- name: Start mysqld manually (non-systemd)
+  shell: "nohup mysqld_safe > /var/log/mysqld.log 2>&1 &"
+  when: not use_systemd | default(false)
 
 - name: Deploy custom my.cnf
   copy:

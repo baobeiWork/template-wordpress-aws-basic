@@ -3,16 +3,19 @@ use_ssm: false
 env_file: "../../.env"
 
 server_name: localhost
-document_root: /var/www/html/wordpress
 
 # Systemd 
 use_systemd: false
 
+# apache
+apache_root: /var/www/html
+
 # Virtualhosts
 virtualhosts:
   - servername: localhost
-    document_root: /var/www/html/wordpress
-    fpm_pool: wordpress
+    config_file: localhost.conf
+    document_root: /var/www/html/localhost
+    fpm_pool: localhost
   # バーチャルホストでサーバを追加したい場合は下記のように追加
   # - servername: example2.com
   #   document_root: /var/www/example2
