@@ -26,6 +26,15 @@
       - php-zip
     state: absent
 
+- name: Ensure php-fpm socket directory exists
+  file:
+    path: /run/php-fpm
+    state: directory
+    owner: apache
+    group: apache
+    mode: '0755'
+  when: env == "development"
+
 - name: Install PHP and necessary modules
   dnf:
     name:
@@ -41,30 +50,47 @@
       - php-zip
     state: present
 
-- name: Enable and start php-fpm service
-  systemd:
-    name: php-fpm
-    enabled: yes
-    state: started
+- name: Kill existing php-fpm processes (for local/dev)
+  shell: "pkill php-fpm || true"
+  when: not use_systemd | default(false)
+
+- name: Remove stale php-fpm socket file (for local/dev)
+  file:
+    path: /run/php-fpm/www.sock
+    state: absent
+  when: not use_systemd | default(false)
+
+- name: Start php-fpm
+  block:
+    - name: Use systemd (production)
+      ansible.builtin.systemd:
+        name: php-fpm
+        state: started
+        enabled: yes
+      when: use_systemd | default(true)
+
+    - name: Use command for local (no systemd)
+      command: php-fpm -D
+      when: not use_systemd | default(false)
 
 - name: Allow Apache to connect to PHP-FPM (SELinux対応)
   command: setsebool -P httpd_can_network_connect on
   when: ansible_facts.selinux.status == "enabled"
 
-# 任意：Firewalld が有効な場合
-- name: Open HTTP port (if firewalld is used)
-  firewalld:
-    port: 80/tcp
-    permanent: yes
-    state: enabled
-    immediate: yes
-  when: ansible_facts.services['firewalld'].state == 'running'
+# # 任意：Firewalld が有効な場合
+# - name: Open HTTP port (if firewalld is used)
+#   firewalld:
+#     port: 80/tcp
+#     permanent: yes
+#     state: enabled
+#     immediate: yes
+#   when: ansible_facts.services['firewalld'].state == 'running'
 
-- name: Deploy php.ini
-  template:
-    src: php.ini.j2
-    dest: /etc/php.ini
-    owner: root
-    group: root
-    mode: '0644'
-  notify: Restart PHP-FPM
+# - name: Deploy php.ini
+#   template:
+#     src: php.ini.j2
+#     dest: /etc/php.ini
+#     owner: root
+#     group: root
+#     mode: '0644'
+#   notify: Restart PHP-FPM
