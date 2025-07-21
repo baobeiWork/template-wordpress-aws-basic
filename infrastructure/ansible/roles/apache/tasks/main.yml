@@ -8,6 +8,15 @@
   command: cp -r /etc/httpd /tmp/backup_apache_conf_{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}
   ignore_errors: true
 
+- name: Ensure Apache socket directory exists
+  file:
+    path: /run/httpd
+    state: directory
+    owner: apache
+    group: apache
+    mode: '0755'
+  when: env == "development"
+
 - name: Remove Apache if installed
   when: apache_installed.rc == 0
   dnf:
@@ -19,16 +28,38 @@
     name: httpd
     state: present
 
-- name: Enable and start Apache
-  systemd:
-    name: httpd
-    enabled: yes
-    state: started
+- name: Kill existing httpd processes (for local/dev)
+  shell: "pkill httpd || true"
+  when: not use_systemd | default(false)
 
-- name: Deploy virtualhost config
+- name: Remove stale httpd socket files (for local/dev)
+  shell: "rm -f /run/httpd/*.sock || true"
+  when: not use_systemd | default(false)
+
+- name: Ensure global ServerName is set
+  lineinfile:
+    path: /etc/httpd/conf/httpd.conf
+    line: "ServerName localhost"
+    state: present
+  when: not use_systemd | default(false)
+
+- name: Start httpd
+  block:
+    - name: Use systemd (production)
+      ansible.builtin.systemd:
+        name: httpd
+        state: started
+        enabled: yes
+      when: use_systemd | default(true)
+
+    - name: Use command for local (no systemd)
+      shell: "httpd -k start"
+      when: not use_systemd | default(false)
+
+- name: Deploy VirtualHost configuration
   template:
-    src: wordpress.conf.j2
-    dest: /etc/httpd/conf.d/wordpress.conf
+    src: virtualhost.conf.j2
+    dest: /etc/httpd/conf.d/virtualhost.conf
     owner: root
     group: root
     mode: '0644'
