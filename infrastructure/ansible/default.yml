@@ -1,9 +1,0 @@
-- hosts: localhost
-  become: true
-  roles:
-    - role: common
-      tasks_from: load_db_vars
-    - php
-    - apache
-    - mysql
-    - wordpress
