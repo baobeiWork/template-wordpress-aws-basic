@@ -5,6 +5,9 @@ env_file: "../../.env"
 server_name: localhost
 document_root: /var/www/html/wordpress
 
+# Systemd 
+use_systemd: false
+
 # Virtualhosts
 virtualhosts:
   - servername: localhost

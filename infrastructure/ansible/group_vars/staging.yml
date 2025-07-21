@@ -13,6 +13,9 @@ aws_region: ap-northeast-1
 server_name: staging.example.com
 document_root: /var/www/html/wordpress
 
+# Systemd 
+use_systemd: true
+
 # Virtualhosts
 virtualhosts:
   - servername: staging.example.com
