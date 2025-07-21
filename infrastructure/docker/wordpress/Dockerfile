@@ -12,6 +12,7 @@ RUN dnf -y update --allowerasing && \
       unzip \
       git \
       curl \
+      procps-ng \
       shadow-utils --allowerasing && \
     pip3 install ansible && \
     dnf clean all
