@@ -1,5 +1,5 @@
 - name: Restart MySQL (systemd)
-  systemd:
+  ansible.builtin.systemd:
     name: mariadb
     state: restarted
   when: use_systemd | default(true)

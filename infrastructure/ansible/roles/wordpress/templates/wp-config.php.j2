@@ -1,0 +1,36 @@
+<?php
+/**
+ * WordPress base configuration.
+ * Generated via Ansible template.
+ */
+
+// ** Database settings ** //
+define( 'DB_NAME',     '{{ item.db_name }}' );
+define( 'DB_USER',     '{{ item.db_user }}' );
+define( 'DB_PASSWORD', '{{ item.db_password }}' );
+define( 'DB_HOST',     '{{ item.db_host }}' );
+define( 'DB_CHARSET',  '{{ item.db_charset | default("utf8mb4") }}' );
+define( 'DB_COLLATE',  '' );
+
+
+// ** Authentication unique keys and salts. **
+define( 'AUTH_KEY',         '{{ item.auth_key }}' );
+define( 'SECURE_AUTH_KEY',  '{{ item.secure_auth_key }}' );
+define( 'LOGGED_IN_KEY',    '{{ item.logged_in_key }}' );
+define( 'NONCE_KEY',        '{{ item.nonce_key }}' );
+define( 'AUTH_SALT',        '{{ item.auth_salt }}' );
+define( 'SECURE_AUTH_SALT', '{{ item.secure_auth_salt }}' );
+define( 'LOGGED_IN_SALT',   '{{ item.logged_in_salt }}' );
+define( 'NONCE_SALT',       '{{ item.nonce_salt }}' );
+
+// ** Table prefix **
+$table_prefix = '{{ item.table_prefix | default("wp_") }}';
+
+// ** Debug mode **
+define( 'WP_DEBUG', {{ item.wp_debug | default(false) | lower }} );
+
+/* That's all, stop editing! Happy publishing. */
+if ( ! defined( 'ABSPATH' ) ) {
+  define( 'ABSPATH', __DIR__ . '/' );
+}
+require_once ABSPATH . 'wp-settings.php';
