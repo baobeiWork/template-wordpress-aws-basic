@@ -1,6 +1,6 @@
 use_ssm: false
 
-env_file: "../../.env"
+env_file: "../../../.env.yml"
 
 server_name: localhost
 
@@ -13,20 +13,31 @@ apache_root: /var/www/html
 # Virtualhosts
 virtualhosts:
   - servername: localhost
-    config_file: localhost.conf
     document_root: /var/www/html/localhost
+    config_file: localhost.conf
     fpm_pool: localhost
-  # バーチャルホストでサーバを追加したい場合は下記のように追加
-  # - servername: example2.com
-  #   document_root: /var/www/example2
-  #   fpm_pool: example2
+    db_name: wp_localhost
+    db_user: wpuser
+    db_password: secret
+    db_host: localhost
+    table_prefix: wp_
+    wp_debug: false
+    auth_key: 'xxx'
+    secure_auth_key: 'xxx'
+    logged_in_key: 'xxx'
+    nonce_key: 'xxx'
+    auth_salt: 'xxx'
+    secure_auth_salt: 'xxx'
+    logged_in_salt: 'xxx'
+    nonce_salt: 'xxx'
 
 # PHP
+php_upload_max_filesize: "2G"
 php_max_execution_time: 60
 php_max_input_time: 90
 php_memory_limit: "256M"
 php_post_max_size: "16M"
-php_upload_max_filesize: "8M"
 php_timezone: "Asia/Tokyo"
+
 
 

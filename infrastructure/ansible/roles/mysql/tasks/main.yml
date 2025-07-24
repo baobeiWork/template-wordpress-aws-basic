@@ -1,5 +1,41 @@
+- name: Load DB values from .env.yml (development)
+  when: not use_ssm
+  include_vars:
+    file: "{{ env_file }}"
+    name: db_env
+
+- name: Ensure setuptools is installed
+  dnf:
+    name: python3-setuptools
+    state: present
+
+- name: Ensure PyMySQL is installed
+  pip:
+    name: PyMySQL
+
+- name: Set DB variables from env
+  when: not use_ssm
+  set_fact:
+    db_name: "{{ db_env.WORDPRESS_DB_NAME }}"
+    db_user: "{{ db_env.WORDPRESS_DB_USER }}"
+    db_password: "{{ db_env.WORDPRESS_DB_PASSWORD }}"
+    db_root_password: "{{ db_env.WORDPRESS_DB_ROOT_PASSWORD }}"
+    db_host: "{{ db_env.WORDPRESS_DB_HOST }}"
+    db_port: "{{ db_env.WORDPRESS_DB_PORT | default('3306') }}"
+    db_charset: "{{ db_env.WORDPRESS_DB_CHARSET | default('utf8mb4') }}"
+
+- name: Load DB values from AWS SSM
+  when: use_ssm
+  set_fact:
+    db_name: "{{ lookup('aws_ssm', db_ssm_parameters.name, region=aws_region) }}"
+    db_user: "{{ lookup('aws_ssm', db_ssm_parameters.user, region=aws_region) }}"
+    db_password: "{{ lookup('aws_ssm', db_ssm_parameters.password, region=aws_region) }}"
+    db_host: "{{ lookup('aws_ssm', db_ssm_parameters.host, region=aws_region) }}"
+    db_port: "{{ lookup('aws_ssm', db_ssm_parameters.port, region=aws_region) }}"
+    db_charset: "{{ lookup('aws_ssm', db_ssm_parameters.charset, region=aws_region) }}"
+
 - name: Check if MySQL is installed
-  shell: rpm -q mariadb-server
+  shell: rpm -q mariadb105-server
   register: mysql_installed
   ignore_errors: true
 
@@ -8,7 +44,7 @@
   command: cp -r /etc/my.cnf /tmp/backup_mysql_conf_{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}
   ignore_errors: true
 
-- name: Remove MySQL if installed
+- name: Remove MariaDB 10.5 if installed
   when: mysql_installed.rc == 0
   dnf:
     name: mariadb105-server
@@ -23,20 +59,28 @@
   shell: "pkill mysqld || true"
   when: not use_systemd | default(false)
 
-- name: Remove stale MySQL socket files (for local/dev)
+- name: Remove stale MySQL files
+  file:
+    path: /var/lib/mysql
+    state: absent
+  become: true
+
+- name: Recreate MySQL data directory
+  file:
+    path: /var/lib/mysql
+    state: directory
+    owner: mysql
+    group: mysql
+    mode: '0755'
+
+- name: Remove old MySQL socket (for local/dev)
   shell: "rm -f /var/lib/mysql/mysql.sock || true"
   when: not use_systemd | default(false)
 
-- name: Ensure MySQL service is started and enabled
-  systemd:
-    name: mariadb
-    enabled: yes
-    state: started
-  when: use_systemd | default(true)
-
-- name: Start mysqld manually (non-systemd)
-  shell: "nohup mysqld_safe > /var/log/mysqld.log 2>&1 &"
-  when: not use_systemd | default(false)
+- name: Initialize MariaDB data directory (10.5 compatible)
+  shell: mysql_install_db --user=mysql --basedir=/usr --datadir=/var/lib/mysql
+  args:
+    creates: /var/lib/mysql/mysql/user.frm
 
 - name: Deploy custom my.cnf
   copy:
@@ -45,4 +89,34 @@
     owner: root
     group: root
     mode: '0644'
-  notify: Restart MySQL
+  notify:
+    - Restart MySQL (systemd)
+    - Restart MySQL (non-systemd)
+
+- name: Ensure MySQL service is started and enabled (systemd)
+  systemd:
+    name: mariadb
+    enabled: yes
+    state: started
+  when: use_systemd | default(true)
+
+- name: Start mysqld manually (non-systemd)
+  shell: "nohup mysqld_safe --datadir=/var/lib/mysql > /var/log/mysqld.log 2>&1 &"
+  when: not use_systemd | default(false)
+
+# - name: Wait for MySQL to be ready
+#   wait_for:
+#     path: /var/lib/mysql/mysql.sock
+#     timeout: 30
+
+# # WordPress用のDB・ユーザーを作成
+# - name: Create WordPress database
+#   mysql_db:
+#     name: "{{ db_name }}"
+#     encoding: "{{ db_charset }}"
+#     state: present
+#     login_user: root
+#     login_password: "{{ db_root_password }}"
+#     login_host: "{{ db_host }}"
+#   become: true
+

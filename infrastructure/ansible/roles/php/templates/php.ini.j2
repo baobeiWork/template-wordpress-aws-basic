@@ -1,42 +1,44 @@
 [PHP]
-engine = On
-short_open_tag = Off
-precision = 14
-output_buffering = 4096
-zlib.output_compression = Off
-implicit_flush = Off
-unserialize_callback_func =
-serialize_precision = -1
-disable_functions =
-disable_classes =
+engine                          = On                               ; PHP エンジンを有効化
+short_open_tag                  = Off                              ; 短縮タグを無効に（セキュリティ）
+precision                       = 14                               ; 浮動小数点の精度
+output_buffering                = 4096                             ; 出力バッファリング
+zlib.output_compression         = Off                              ; zlib 圧縮を無効化
+implicit_flush                  = Off                              ; 自動フラッシュを無効化
+unserialize_callback_func       =                                  ; 非推奨、空でOK
+serialize_precision             = -1                               ; PHP 7.1+ デフォルト
+disable_functions               =                                  ; 必要なら `exec`, `system` などを列挙
+disable_classes                 =                                  ; 使用禁止クラス（未指定）
 
-expose_php = Off
-max_execution_time = {{ php_max_execution_time | default(30) }}
-max_input_time = {{ php_max_input_time | default(60) }}
-memory_limit = {{ php_memory_limit | default('128M') }}
-error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT
-display_errors = Off
-display_startup_errors = Off
-log_errors = On
-error_log = /var/log/php_errors.log
-post_max_size = {{ php_post_max_size | default('8M') }}
-upload_max_filesize = {{ php_upload_max_filesize | default('2M') }}
-variables_order = "GPCS"
-request_order = "GP"
+expose_php                     = Off                               ; PHP のバージョンをヘッダに出さない
+
+max_execution_time             = {{ php_max_execution_time | default(30) }}         ; スクリプト最大実行秒数
+max_input_time                 = {{ php_max_input_time | default(60) }}             ; 入力データのパースにかける最大秒数
+memory_limit                   = {{ php_memory_limit | default('128M') }}           ; スクリプトごとのメモリ上限
+
+error_reporting                = E_ALL & ~E_DEPRECATED & ~E_STRICT ; エラーレベル
+display_errors                 = Off                               ; 画面にエラー表示しない（本番は Off）
+display_startup_errors         = Off                               ; 起動エラー表示無効
+log_errors                     = On                                ; エラーをログに出力
+error_log                      = /var/log/php_errors.log           ; エラーログの出力先
+post_max_size                  = {{ php_post_max_size | default('8M') }}            ; POST データの最大サイズ
+upload_max_filesize            = {{ php_upload_max_filesize | default('2M') }}      ; アップロード最大サイズ
+variables_order                = "GPCS"                            ; グローバル変数の順序
+request_order                  = "GP"                              ; $_REQUEST の順序
 
 [Date]
-date.timezone = {{ php_timezone | default('Asia/Tokyo') }}
+date.timezone                  = {{ php_timezone | default('Asia/Tokyo') }}         ; タイムゾーン
 
 [mbstring]
-mbstring.language = Japanese
-mbstring.internal_encoding = UTF-8
-mbstring.http_input = auto
-mbstring.http_output = UTF-8
-mbstring.encoding_translation = On
+mbstring.language              = Japanese                          ; マルチバイト言語設定
+mbstring.internal_encoding     = UTF-8                             ; 内部エンコーディング
+mbstring.http_input            = auto                              ; 入力の自動変換
+mbstring.http_output           = UTF-8                             ; 出力エンコーディング
+mbstring.encoding_translation  = On                                ; エンコーディング変換有効
 
 [Session]
-session.save_handler = files
-session.save_path = "/var/lib/php/session"
-session.gc_maxlifetime = 1440
-session.gc_divisor = 1000
-session.gc_probability = 1
+session.save_handler           = files                             ; セッション保存方式
+session.save_path              = "/var/lib/php/session"            ; 保存パス
+session.gc_maxlifetime         = 1440                              ; セッション有効時間（秒）
+session.gc_divisor             = 1000                              ; GC 実行確率分母
+session.gc_probability         = 1                                 ; GC 実行確率分子

@@ -1,4 +1,9 @@
-- name: Reload Apache
+- name: Reload Apache (systemd)
   systemd:
     name: httpd
     state: reloaded
+  when: use_systemd | default(true)
+
+- name: Reload Apache (non-systemd)
+  shell: "pkill httpd && nohup httpd -DFOREGROUND > /var/log/httpd.log 2>&1 &"
+  when: not use_systemd | default(false)

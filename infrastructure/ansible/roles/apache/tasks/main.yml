@@ -28,6 +28,11 @@
     name: httpd
     state: present
 
+- name: Ensure findutils is installed (provides find command)
+  dnf:
+    name: findutils
+    state: present
+
 - name: Kill existing httpd processes (for local/dev)
   shell: "pkill httpd || true"
   when: not use_systemd | default(false)
@@ -43,6 +48,13 @@
     state: present
   when: not use_systemd | default(false)
 
+- name: Ensure conf.d is included in httpd.conf
+  lineinfile:
+    path: /etc/httpd/conf/httpd.conf
+    regexp: '^#?Include.*conf\.d/\*\.conf'
+    line: 'IncludeOptional conf.d/*.conf'
+    state: present
+
 - name: Start httpd
   block:
     - name: Use systemd (production)
@@ -56,11 +68,39 @@
       shell: "httpd -k start"
       when: not use_systemd | default(false)
 
-- name: Deploy VirtualHost configuration
+- name: Find virtualhost template files
+  find:
+    paths: "roles/apache/templates/virtualhost"
+    patterns: "*.j2"
+  register: vhost_templates
+
+- name: Deploy all virtualhost templates
   template:
-    src: virtualhost.conf.j2
-    dest: /etc/httpd/conf.d/virtualhost.conf
+    src: "virtualhost/{{ item.config_file }}.j2"
+    dest: "/etc/httpd/conf.d/{{ item.config_file }}"
     owner: root
     group: root
     mode: '0644'
-  notify: Reload Apache
+  loop: "{{ virtualhosts }}"
+  notify:
+  - Reload Apache (systemd)
+  - Reload Apache (non-systemd)
+
+- name: Ensure document root ownership is apache:apache
+  file:
+    path: "{{ item.document_root }}"
+    state: directory
+    recurse: yes
+    owner: apache
+    group: apache
+  loop: "{{ virtualhosts }}"
+
+- name: Ensure directory permissions under document root
+  shell: find "{{ item.document_root }}" -type d -exec chmod 755 {} \;
+  loop: "{{ virtualhosts }}"
+
+- name: Ensure file permissions under document root
+  shell: find "{{ item.document_root }}" -type f -exec chmod 644 {} \;
+  loop: "{{ virtualhosts }}"
+
+
