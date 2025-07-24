@@ -4,7 +4,6 @@ AWSのEC2上に WordPress 環境を迅速に構築するためのテンプレー
 Ansible, Docker, MariaDB, Apache, PHP, WordPress を活用し、ローカル開発環境と本番環境を統一的に管理します。
 
 ## ディレクトリ構成概要
----
 
 ```bash
 ├── ansible/ # サーバ構成管理（本番/開発/ステージング対応）
@@ -17,7 +16,6 @@ Ansible, Docker, MariaDB, Apache, PHP, WordPress を活用し、ローカル開�
 
 
 ## ローカル開発環境の構築手順
----
 
 ```bash
 # イメージビルド
@@ -30,7 +28,6 @@ docker-compose up -d
 http://localhost:8080
 
 ```
-
 
 ## Ansible による構築
 
@@ -48,9 +45,9 @@ ansible-playbook -i hosts production.yml
 ```
 
 ## 変数の切り替え
-# group_vars/production.yml の例
 
-```
+```bash
+# group_vars/production.yml の例
 env_file: "../../.env.production.yml"
 use_ssm: true
 use_systemd: true
