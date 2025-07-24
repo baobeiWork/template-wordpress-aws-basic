@@ -2,6 +2,7 @@
 
 AWSのEC2上に WordPress 環境を迅速に構築するためのテンプレートプロジェクトです。  
 Ansible, Docker, MariaDB, Apache, PHP, WordPress を活用し、ローカル開発環境と本番環境を統一的に管理します。
+（Cloud Formation / TerraformによるAWSリソースの構築コードは追って追加予定 2025/07/24）
 
 ## ディレクトリ構成概要
 
