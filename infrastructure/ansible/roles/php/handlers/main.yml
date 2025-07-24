@@ -1,4 +1,12 @@
-- name: Restart PHP-FPM
+- name: Reload Apache
+  shell: |
+    if pidof httpd > /dev/null; then
+      apachectl -k graceful
+    fi
+  when: not use_systemd | default(false)
+
+- name: Restart Apache (systemd)
   systemd:
-    name: php-fpm
+    name: httpd
     state: restarted
+  when: use_systemd | default(true)

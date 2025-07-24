@@ -1,5 +1,9 @@
 - hosts: localhost
+  vars:
+      env: production
   become: true
+  vars_files:
+    - group_vars/prouction.yml
   roles:
     - role: common
       tasks_from: load_db_vars
@@ -7,3 +11,4 @@
     - apache
     - mysql
     - wordpress
+

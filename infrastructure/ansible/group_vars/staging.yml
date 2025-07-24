@@ -11,7 +11,12 @@ db_ssm_parameters:
 aws_region: ap-northeast-1
 
 server_name: staging.example.com
-document_root: /var/www/html/wordpress
+
+# Systemd 
+use_systemd: true
+
+# apache
+apache_root: /var/www
 
 # Virtualhosts
 virtualhosts:
